@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/driver/sqlite"
@@ -39,6 +41,15 @@ type Book struct {
 }
 
 func (h *Handler) listBooksHandler(c *gin.Context) {
+
+	s := c.Request.Header.Get("Authorization")
+	token := strings.TrimPrefix(s, "Bearer ")
+
+	if err := validateToken(token); err != nil {
+		c.AbortWithStatus(http.StatusUnauthorized)
+		return
+	}
+
 	var books []Book
 	if result := h.db.Find(&books); result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -47,6 +58,13 @@ func (h *Handler) listBooksHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, books)
+}
+
+func validateToken(token string) error {
+	if token == "" {
+		return fmt.Errorf("token should not be empty")
+	}
+	return nil
 }
 
 func (h *Handler) createBookHandler(c *gin.Context) {
