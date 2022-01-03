@@ -1,11 +1,18 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
 )
+
+func main() {
+	r := gin.New()
+	r.GET("/books", listBooksHandler)
+	r.POST("/books", createBookHandler)
+	r.DELETE("/books/:id", deleteBookHandler)
+	r.Run()
+}
 
 type Book struct {
 	ID     string `json:"id"`
@@ -19,48 +26,34 @@ var books = []Book{
 	{ID: "3", Title: "The Wizard of Oz", Author: "L. Frank Baum"},
 }
 
-func main() {
+func listBooksHandler(c *gin.Context) {
+	c.JSON(http.StatusOK, books)
+}
 
-	fmt.Println("test")
-	r := gin.New()
-	r.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "Hello World",
+func createBookHandler(c *gin.Context) {
+	var book Book
+
+	if err := c.ShouldBindJSON(&book); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": err.Error(),
 		})
-	})
+		return
+	}
 
-	r.GET("/books", func(c *gin.Context) {
+	books = append(books, book)
 
-		c.JSON(http.StatusOK, books)
-	})
+	c.JSON(http.StatusCreated, book)
+}
 
-	r.POST("/books", func(c *gin.Context) {
+func deleteBookHandler(c *gin.Context) {
+	id := c.Param("id")
 
-		var book Book
-		if err := c.ShouldBindJSON(&book); err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{
-				"error": err.Error(),
-			})
-			return
+	for i, a := range books {
+		if a.ID == id {
+			books = append(books[:i], books[i+1:]...)
+			break
 		}
+	}
 
-		books = append(books, book)
-		c.JSON(http.StatusCreated, book)
-
-	})
-
-	r.DELETE("/books/:id", func(c *gin.Context) {
-		id := c.Param("id")
-
-		for i, a := range books {
-			if a.ID == id {
-				books = append(books[:i], books[i+1:]...)
-				break
-			}
-		}
-		c.Status(http.StatusNoContent)
-
-	})
-
-	r.Run()
+	c.Status(http.StatusNoContent)
 }
