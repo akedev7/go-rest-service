@@ -1,5 +1,5 @@
 GET http://localhost:8080/books
-Authorization: Bearer abcdefghijk
+Authorization: Bearer ACCESS_TOKEN
 ###
 
 POST http://localhost:8080/books
@@ -13,3 +13,6 @@ Content-Type: application/json
 
 ###
 DELETE http://localhost:8080/books/4
+
+###
+POST http://localhost:8080/login
