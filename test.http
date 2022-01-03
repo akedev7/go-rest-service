@@ -1,4 +1,5 @@
 GET http://localhost:8080/books
+Authorization: Bearer abcdefghijk
 ###
 
 POST http://localhost:8080/books

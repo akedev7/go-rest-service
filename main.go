@@ -28,9 +28,13 @@ func main() {
 	handler := newHandler(db)
 
 	r := gin.New()
-	r.GET("/books", handler.listBooksHandler)
-	r.POST("/books", handler.createBookHandler)
-	r.DELETE("/books/:id", handler.deleteBookHandler)
+
+	protected := r.Group("/", authorizationMiddleWare)
+
+	protected.GET("/books", handler.listBooksHandler)
+	protected.POST("/books", handler.createBookHandler)
+	protected.DELETE("/books/:id", handler.deleteBookHandler)
+
 	r.Run()
 }
 
@@ -40,8 +44,7 @@ type Book struct {
 	Author string `json:"author`
 }
 
-func (h *Handler) listBooksHandler(c *gin.Context) {
-
+func authorizationMiddleWare(c *gin.Context) {
 	s := c.Request.Header.Get("Authorization")
 	token := strings.TrimPrefix(s, "Bearer ")
 
@@ -50,6 +53,8 @@ func (h *Handler) listBooksHandler(c *gin.Context) {
 		return
 	}
 
+}
+func (h *Handler) listBooksHandler(c *gin.Context) {
 	var books []Book
 	if result := h.db.Find(&books); result.Error != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{
@@ -57,6 +62,7 @@ func (h *Handler) listBooksHandler(c *gin.Context) {
 		})
 		return
 	}
+
 	c.JSON(http.StatusOK, books)
 }
 
